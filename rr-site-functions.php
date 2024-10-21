@@ -120,3 +120,16 @@ function rr_ajax_perform_initial_setup() {
     echo "<strong>Site ID: " . get_current_blog_id() . "</strong><br>" . implode('<br>', $results);
     wp_die();
 }
+
+// Register settings with REST API
+function rr_register_settings_rest_api() {
+    $fields = rr_settings_fields();
+    foreach ($fields as $field_id => $field) {
+        register_setting('rank-and-rent-settings-group', $field_id, array(
+            'show_in_rest' => true,
+            'type' => 'string', // Adjust this based on your field types
+            'description' => $field['label'],
+        ));
+    }
+}
+add_action('rest_api_init', 'rr_register_settings_rest_api');
