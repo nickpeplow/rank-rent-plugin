@@ -1,0 +1,15 @@
+{
+    "rr_network_business_name": {
+        "label": "Network Business Name",
+        "type": "text"
+    },
+    "rr_network_phone_number": {
+        "label": "Network Phone Number",
+        "type": "text"
+    },
+    "rr_network_address": {
+        "label": "Network Business Address",
+        "type": "textarea"
+    }
+}
+

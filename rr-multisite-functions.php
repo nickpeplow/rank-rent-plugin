@@ -12,6 +12,7 @@ function rr_multisite_function() {
 
 // Add network admin menu
 function rr_add_network_admin_menu() {
+    // Network setup page
     add_submenu_page(
         'settings.php',
         'Rank & Rent Network Setup',
@@ -20,8 +21,76 @@ function rr_add_network_admin_menu() {
         'rank-and-rent-network-setup',
         'rr_render_network_setup_page'
     );
+
+    // Network settings page
+    add_menu_page(
+        'Rank & Rent Network Settings',
+        'Rank & Rent',
+        'manage_network_options',
+        'rank-and-rent-network-settings',
+        'rr_render_network_settings_page',
+        'dashicons-admin-generic',
+        30
+    );
 }
 add_action('network_admin_menu', 'rr_add_network_admin_menu');
+
+// Define network settings fields
+function rr_network_settings_fields() {
+    $json_file = plugin_dir_path(__FILE__) . 'rr-network-fields.json';
+    $fields_json = file_get_contents($json_file);
+    return json_decode($fields_json, true);
+}
+
+// Render network settings page
+function rr_render_network_settings_page() {
+    // Enqueue the shared admin script
+    wp_enqueue_script('rr-admin-script', plugin_dir_url(__FILE__) . 'rr-admin.js', array('jquery'), '1.0', true);
+
+    ?>
+    <div class="wrap">
+        <h1>Rank & Rent Network Settings</h1>
+        <form method="post" action="edit.php?action=rr_update_network_settings">
+            <?php
+            wp_nonce_field('rr_network_settings_nonce');
+            
+            $fields = rr_network_settings_fields();
+            foreach ($fields as $field_id => $field) {
+                $value = get_site_option($field_id);
+                ?>
+                <div class="form-field">
+                    <label for="<?php echo esc_attr($field_id); ?>"><?php echo esc_html($field['label']); ?></label>
+                    <?php if ($field['type'] === 'textarea'): ?>
+                        <textarea id="<?php echo esc_attr($field_id); ?>" name="<?php echo esc_attr($field_id); ?>"><?php echo esc_textarea($value); ?></textarea>
+                    <?php else: ?>
+                        <input type="<?php echo esc_attr($field['type']); ?>" id="<?php echo esc_attr($field_id); ?>" name="<?php echo esc_attr($field_id); ?>" value="<?php echo esc_attr($value); ?>">
+                    <?php endif; ?>
+                </div>
+                <?php
+            }
+            submit_button('Save Network Settings');
+            ?>
+        </form>
+    </div>
+    <?php
+}
+
+// Handle network settings update
+add_action('network_admin_edit_rr_update_network_settings', 'rr_handle_network_settings_update');
+
+function rr_handle_network_settings_update() {
+    check_admin_referer('rr_network_settings_nonce');
+
+    $fields = rr_network_settings_fields();
+    foreach ($fields as $field_id => $field) {
+        if (isset($_POST[$field_id])) {
+            update_site_option($field_id, $_POST[$field_id]);
+        }
+    }
+
+    wp_redirect(add_query_arg(array('page' => 'rank-and-rent-network-settings', 'updated' => 'true'), network_admin_url('admin.php')));
+    exit;
+}
 
 // Render network setup page
 function rr_render_network_setup_page() {
@@ -81,4 +150,9 @@ function rr_ajax_perform_network_setup() {
     // Send a response
     echo implode('<hr>', $results);
     wp_die();
+}
+
+// Function to get network setting value
+function rr_get_network_setting($key) {
+    return get_site_option($key, '');
 }

@@ -24,20 +24,9 @@ add_action('admin_menu', 'rr_add_settings_page');
 
 // Define settings fields
 function rr_settings_fields() {
-    return array(
-        'rr_business_name' => array(
-            'label' => 'Business Name',
-            'type' => 'text',
-        ),
-        'rr_phone_number' => array(
-            'label' => 'Phone Number',
-            'type' => 'text',
-        ),
-        'rr_address' => array(
-            'label' => 'Business Address',
-            'type' => 'textarea',
-        ),
-    );
+    $json_file = plugin_dir_path(__FILE__) . 'rr-site-fields.json';
+    $fields_json = file_get_contents($json_file);
+    return json_decode($fields_json, true);
 }
 
 // Render settings page

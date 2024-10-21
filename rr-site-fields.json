@@ -1,0 +1,15 @@
+{
+    "rr_business_name": {
+        "label": "Business Name",
+        "type": "text"
+    },
+    "rr_phone_number": {
+        "label": "Phone Number",
+        "type": "text"
+    },
+    "rr_address": {
+        "label": "Business Address",
+        "type": "textarea"
+    }
+}
+
