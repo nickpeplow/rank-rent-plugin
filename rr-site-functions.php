@@ -42,6 +42,9 @@ function rr_settings_fields() {
 
 // Render settings page
 function rr_render_settings_page() {
+    // Enqueue the shared admin script
+    wp_enqueue_script('rr-admin-script', plugin_dir_url(__FILE__) . 'rr-admin.js', array('jquery'), '1.0', true);
+
     ?>
     <div class="wrap">
         <h1>Rank & Rent Settings</h1>
@@ -70,36 +73,9 @@ function rr_render_settings_page() {
         <hr>
         <h2>Initial Setup</h2>
         <p>Click the button below to perform the initial setup tasks:</p>
-        <button id="rr-perform-setup" class="button button-primary">Perform Initial Setup</button>
-        <div id="rr-setup-message"></div>
+        <button id="rr-perform-setup" class="button button-primary rr-perform-setup" data-action="rr_perform_initial_setup" data-nonce="<?php echo wp_create_nonce('rr_initial_setup_nonce'); ?>">Perform Initial Setup</button>
+        <div class="rr-setup-message"></div>
     </div>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#rr-perform-setup').on('click', function(e) {
-            e.preventDefault();
-            var button = $(this);
-            button.prop('disabled', true);
-            $('#rr-setup-message').html('Running setup...');
-            
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'rr_perform_initial_setup',
-                    nonce: '<?php echo wp_create_nonce('rr_initial_setup_nonce'); ?>'
-                },
-                success: function(response) {
-                    $('#rr-setup-message').html(response);
-                    button.prop('disabled', false);
-                },
-                error: function() {
-                    $('#rr-setup-message').html('An error occurred. Please try again.');
-                    button.prop('disabled', false);
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
 
@@ -133,10 +109,25 @@ function rr_ajax_perform_initial_setup() {
         wp_die('Security check failed.');
     }
 
-    // Perform the initial setup
-    rr_perform_initial_setup();
+    $results = array();
+    $results[] = "Starting setup for site ID: " . get_current_blog_id();
+
+    // Permalink structure
+    $results[] = rr_set_permalink_structure();
+
+    // Uploads folder
+    $old_value = get_option('uploads_use_yearmonth_folders');
+    rr_disable_uploads_yearmonth_folders();
+    $new_value = get_option('uploads_use_yearmonth_folders');
+    $results[] = "uploads_use_yearmonth_folders changed from '$old_value' to '$new_value'";
+
+    // Comments
+    $old_status = get_option('default_comment_status');
+    rr_disable_comments();
+    $new_status = get_option('default_comment_status');
+    $results[] = "default_comment_status changed from '$old_status' to '$new_status'";
 
     // Send a response
-    echo 'Initial setup completed successfully.';
+    echo "<strong>Site ID: " . get_current_blog_id() . "</strong><br>" . implode('<br>', $results);
     wp_die();
 }

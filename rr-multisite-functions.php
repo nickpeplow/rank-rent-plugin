@@ -25,41 +25,16 @@ add_action('network_admin_menu', 'rr_add_network_admin_menu');
 
 // Render network setup page
 function rr_render_network_setup_page() {
+    // Enqueue the shared admin script
+    wp_enqueue_script('rr-admin-script', plugin_dir_url(__FILE__) . 'rr-admin.js', array('jquery'), '1.0', true);
+
     ?>
     <div class="wrap">
         <h1>Rank & Rent Network Setup</h1>
         <p>Click the button below to perform the initial setup tasks for all sites in the network:</p>
-        <button id="rr-perform-network-setup" class="button button-primary">Perform Network Setup</button>
-        <div id="rr-network-setup-message"></div>
+        <button id="rr-perform-network-setup" class="button button-primary rr-perform-setup" data-action="rr_perform_network_setup" data-nonce="<?php echo wp_create_nonce('rr_network_setup_nonce'); ?>">Perform Network Setup</button>
+        <div class="rr-setup-message"></div>
     </div>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#rr-perform-network-setup').on('click', function(e) {
-            e.preventDefault();
-            var button = $(this);
-            var messageDiv = $('#rr-network-setup-message');
-            button.prop('disabled', true);
-            messageDiv.html('<p>Running setup for all sites...</p>');
-            
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'rr_perform_network_setup',
-                    nonce: '<?php echo wp_create_nonce('rr_network_setup_nonce'); ?>'
-                },
-                success: function(response) {
-                    messageDiv.html('<h3>Setup Results:</h3>' + response);
-                    button.prop('disabled', false);
-                },
-                error: function() {
-                    messageDiv.html('<p>An error occurred. Please try again.</p>');
-                    button.prop('disabled', false);
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
 
