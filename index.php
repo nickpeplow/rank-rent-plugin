@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) {
 // Include function files
 require_once plugin_dir_path(__FILE__) . 'rr-multisite-functions.php';
 require_once plugin_dir_path(__FILE__) . 'rr-site-functions.php';
+require_once plugin_dir_path(__FILE__) . 'rr-setup-functions.php';
 
 // Plugin activation hook
 register_activation_hook(__FILE__, 'rr_activate');

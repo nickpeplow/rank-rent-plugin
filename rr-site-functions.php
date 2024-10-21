@@ -67,7 +67,39 @@ function rr_render_settings_page() {
             submit_button();
             ?>
         </form>
+        <hr>
+        <h2>Initial Setup</h2>
+        <p>Click the button below to perform the initial setup tasks:</p>
+        <button id="rr-perform-setup" class="button button-primary">Perform Initial Setup</button>
+        <div id="rr-setup-message"></div>
     </div>
+    <script>
+    jQuery(document).ready(function($) {
+        $('#rr-perform-setup').on('click', function(e) {
+            e.preventDefault();
+            var button = $(this);
+            button.prop('disabled', true);
+            $('#rr-setup-message').html('Running setup...');
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'rr_perform_initial_setup',
+                    nonce: '<?php echo wp_create_nonce('rr_initial_setup_nonce'); ?>'
+                },
+                success: function(response) {
+                    $('#rr-setup-message').html(response);
+                    button.prop('disabled', false);
+                },
+                error: function() {
+                    $('#rr-setup-message').html('An error occurred. Please try again.');
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    });
+    </script>
     <?php
 }
 
@@ -87,5 +119,24 @@ function rr_get_setting($key) {
 
 // Add any other multisite-related functions here
 
+// Add AJAX handler for initial setup
+add_action('wp_ajax_rr_perform_initial_setup', 'rr_ajax_perform_initial_setup');
 
+function rr_ajax_perform_initial_setup() {
+    // Ensure user has necessary permissions
+    if (!current_user_can('manage_options')) {
+        wp_die('You do not have sufficient permissions to access this page.');
+    }
 
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'rr_initial_setup_nonce')) {
+        wp_die('Security check failed.');
+    }
+
+    // Perform the initial setup
+    rr_perform_initial_setup();
+
+    // Send a response
+    echo 'Initial setup completed successfully.';
+    wp_die();
+}
